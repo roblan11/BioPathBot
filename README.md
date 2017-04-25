@@ -23,3 +23,9 @@ et ajoute l'évènement dans la page de référence spatiotemporelle de taille m
 La biographie d'Henri Dunant est transformée en séquence de zones spatiotemporelles.
 
 Eventuellement cette page peut aussi contenir une carte temporelle.
+
+## Login
+
+username: BioPathBot
+password: chkiroju
+(email: roblan11@hotmail.com)
