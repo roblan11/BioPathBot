@@ -26,6 +26,6 @@ Eventuellement cette page peut aussi contenir une carte temporelle.
 
 ## Login
 
-username: BioPathBot
-password: chkiroju
+username: BioPathBot <br>
+password: chkiroju <br>
 (email: roblan11@hotmail.com)
