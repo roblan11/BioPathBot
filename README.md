@@ -1,5 +1,14 @@
 # BioPathBot
 
+## Collaborateurs
+
+* Christophe Badoux
+* Kim Lan Phan Hoang
+* Robin Lan
+* Julien Burkhard
+
+## Objectif
+
 Ce bot effectue deux types d'actions en parallèle :
 
 1. Il gère automatiquement les informations ayant lieu dans des zones spatiotemporelles en recopiant toutes les informations correspondant à une zone spatiotemporelle donnée.
