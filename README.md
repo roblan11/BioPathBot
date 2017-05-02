@@ -7,6 +7,9 @@
 * Robin Lan
 * Julien Burkhard
 
+## Librairies
+**Basemap** pour dessiner des cartes: http://matplotlib.org/basemap/index.html
+
 ## Objectif
 
 Ce bot effectue deux types d'actions en parallèle :
