@@ -7,6 +7,10 @@ import math
 import datetime
 from geopy.geocoders import Nominatim
 
+def degre_to_radiant(data):
+    radiant=data*math.pi/180.0
+    return radiant
+
 user='BioPathBot'
 passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
@@ -67,20 +71,19 @@ for name in names:
             convert=int(1.0*timestamp/(24*3600))
             date_convert = str(convert)
             # print(str(date)+' => '+str(convert))
+            print(date_convert)
 
         # get place if exist
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ]*(?=\]\])",line)
         place_convert = ""
         if len(place) != 0:
              placeToAdd = place[0]
-             
+
              location = geolocator.geocode(placeToAdd)
 
              pos_lieux = [[location.latitude, location.longitude,0]]
-             def degre_to_radiant(data):
-                 radiant=data*math.pi/180.0
-                 return radiant
-
+             print(pos_lieux)
+"""
              pos_lieux_rad=[]
              for i in range(len(pos_lieux)):
                  temp=[]
@@ -136,6 +139,7 @@ for name in names:
                  for j in range(len(le_address)):
                      le_address[j]=str(le_address[j])
                  place_convert = ''.join([str(x) for x in le_address])
+
                  # print(placeToAdd + ' => '+place_convert)
 
         # if both the date and the location are available, create a new page
@@ -143,3 +147,4 @@ for name in names:
         if date_convert and place_convert:
             # TODO: add new spatiotemporal page
             print("create new page " + place_convert + ":" + date_convert)
+            """
