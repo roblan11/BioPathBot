@@ -2,8 +2,6 @@
 
 import urllib.request
 import requests
-import requests
-import os
 
 user='BioPathBot'
 passw='chkiroju'
@@ -30,7 +28,6 @@ edit_cookie.update(r3.cookies)
 
 # upload config
 upload_filename = "map1.png"
-upload_comment = "image upload test"
 
 # read local file
 upload_file = open(upload_filename,"rb")
@@ -39,12 +36,7 @@ upload_file.close()
 
 # setting parameters for upload
 # ref: https://www.mediawiki.org/wiki/API:Upload
-payload={
-	'action':'upload',
-	'filename':upload_filename,
-	'token':edit_token,
-}
-
+payload={'action':'upload','filename':upload_filename, 'token':edit_token}
 files={'file':upload_contents}
 
 # upload the image
