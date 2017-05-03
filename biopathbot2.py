@@ -7,10 +7,6 @@ import math
 import datetime
 from geopy.geocoders import Nominatim
 
-def degre_to_radiant(data):
-    radiant=data*math.pi/180.0
-    return radiant
-
 user='BioPathBot'
 passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
@@ -35,7 +31,7 @@ edit_cookie=r2.cookies.copy()
 edit_cookie.update(r3.cookies)
 
 #setup geolocator
-geolocator = Nominatim()
+geolocator = Nominatim(timeout=10)
 
 # BioPathBot : add line of databiographie to the right page (time and space)
 for name in names:
@@ -59,12 +55,14 @@ for name in names:
 
         if len(date) != 0 :
             dateToAdd = date[0][0]
+
         # get place if exist
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
              placeToAdd = place[0]
              location = geolocator.geocode(placeToAdd)
+
         # if both the date and the location are available, create a new page
         # or append to an existing page
         if dateToAdd and location:
