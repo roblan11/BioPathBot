@@ -8,8 +8,9 @@
 * Julien Burkhard
 
 ## Librairies
-**Basemap** pour dessiner des cartes: http://matplotlib.org/basemap/index.html
-**Geopy** pour trouver les coordonnées géographique d'un lieu: https://pypi.python.org/pypi/geopy
+
+* **Basemap** pour dessiner des cartes: http://matplotlib.org/basemap/index.html
+* **Geopy** pour trouver les coordonnées géographique d'un lieu: https://pypi.python.org/pypi/geopy
 
 ## Objectif
 
