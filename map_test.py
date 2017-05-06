@@ -3,7 +3,7 @@ from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
 # draw plots inline rather than in a seperate window
-#%matplotlib inline
+%matplotlib inline
 # draw plots bigger
 plt.rcParams["figure.figsize"] = [20.0, 10.0]
 
@@ -39,7 +39,7 @@ def drawmap(pts, filename, export=False):
     for i in range(len(pts)-1): # draw lines
         m.plot([pts[i][0], pts[i+1][0]], [pts[i][1], pts[i+1][1]], color='blue');
     if export:
-        plt.savefig(filename);
+        plt.savefig(filename, bbox_inches='tight')
     plt.show()
 
 points = [[6, 46.5], [7, 47], [6, 47], [9, 46], [10, 48], [7.5, 80]]
