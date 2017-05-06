@@ -27,21 +27,24 @@ edit_cookie=r2.cookies.copy()
 edit_cookie.update(r3.cookies)
 
 # upload config
-upload_filename = "map1.png"
+def uploadMap():
+    upload_filename = "map1.png"
 
-# read local file
-upload_file = open(upload_filename,"rb")
-upload_contents = upload_file.read()
-upload_file.close()
+    # read local file
+    upload_file = open(upload_filename,"rb")
+    upload_contents = upload_file.read()
+    upload_file.close()
 
-# setting parameters for upload
-# ref: https://www.mediawiki.org/wiki/API:Upload
-payload={'action':'upload','filename':upload_filename, 'token':edit_token}
-files={'file':upload_contents}
+    # setting parameters for upload
+    # ref: https://www.mediawiki.org/wiki/API:Upload
+    payload={'action':'upload','filename':upload_filename, 'ignorewarnings':1, 'token':edit_token}
+    files={'file':upload_contents}
 
-# upload the image
-print("Uploading file to %s via API..." % (baseurl+"index.php/Fichier:"+upload_filename))
-r4=requests.post(baseurl+'api.php',data=payload,files=files,cookies=edit_cookie)
+    # upload the image
+    print("Uploading file to %s via API..." % (baseurl+"index.php/Fichier:"+upload_filename))
+    r4=requests.post(baseurl+'api.php',data=payload,files=files,cookies=edit_cookie)
 
-# in case of error print the response
-# print(r4.text)
+    # in case of error print the response
+    #print(r4.text)
+
+uploadMap()

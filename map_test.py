@@ -3,7 +3,7 @@ from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
 # draw plots inline rather than in a seperate window
-%matplotlib inline
+#%matplotlib inline
 # draw plots bigger
 plt.rcParams["figure.figsize"] = [20.0, 10.0]
 
@@ -27,7 +27,7 @@ def findCorners(pts):
     return [minlon, maxlon, minlat, maxlat]
 
 # draws the map, some points and the lines
-def drawmap(pts, export=False):
+def drawmap(pts, filename, export=False):
     corners = findCorners(pts)
     m1 = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
     m1.drawcountries(linewidth=1.0, color='red')
@@ -37,8 +37,8 @@ def drawmap(pts, export=False):
     for i in range(len(pts)-1): # draw lines
         m1.plot([pts[i][0], pts[i+1][0]], [pts[i][1], pts[i+1][1]], color='blue');
     if export:
-        plt.savefig('map1.png');
+        plt.savefig(filename);
     plt.show()
 
 points = [[6, 46.5], [7, 47], [6, 47], [9, 46], [10, 48], [7.5, 47]]
-drawmap(points, True)
+drawmap(points, "map1.png",True)
