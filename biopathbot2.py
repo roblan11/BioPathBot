@@ -7,9 +7,12 @@ import datetime
 from geopy.geocoders import Nominatim
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
+from colorsys import hsv_to_rgb
+from matplotlib.colors import rgb2hex
+SEGMENTS = 100
 
 # draw plots inline rather than in a seperate window
-#%matplotlib inline
+%matplotlib inline
 # draw plots bigger
 plt.rcParams["figure.figsize"] = [20.0, 10.0]
 
@@ -79,7 +82,7 @@ def addToPage(name, img):
     payload={'action':'edit','assert':'user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
     r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
 
-# @TODO not get post-mortem data -> check Décès 
+# @TODO not get post-mortem data -> check Décès
 # BioPathBot : add line of databiographie to the right page (time and space)
 def getDataFromPage(name):
     data = []
@@ -139,17 +142,22 @@ def findCorners(pts):
 
 # draws the map, some points and the lines
 def drawmap(pts, filename, export=False):
-    if pts.amount() != 0:
+    n_pts = len(pts)
+    if n_pts != 0:
         corners = findCorners(pts)
-        m1 = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
-        m1.drawcountries(linewidth=1.0, color='red')
-        for p in pts: # draw points
-            x, y = m1(p[0], p[1])
-            m1.plot(x, y, 'bo')
-        for i in range(len(pts)-1): # draw lines
-            m1.plot([pts[i][0], pts[i+1][0]], [pts[i][1], pts[i+1][1]], color='blue');
+        m = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
+        m.drawmapboundary(fill_color='0.6')
+        m.drawcountries(linewidth=1.0, color='0.6')
+        m.fillcontinents(color='white', lake_color='white')
+        for i in range(n_pts-1): # draw lines
+            for j in range(SEGMENTS):
+                start = pts[i] + (pts[i+1]-pts[i])*(j/SEGMENTS)
+                end = pts[i] + (pts[i+1]-pts[i])*((j+1)/SEGMENTS)
+                m.plot([start[0], end[0]], [start[1], end[1]], color=hsv_to_rgb((i+j/SEGMENTS)/n_pts, 1, 1))
+        for i in range(n_pts): # draw points
+            m.plot(pts[i][0], pts[i][1], marker='o', color=hsv_to_rgb(i/n_pts, 1, 1), fillstyle='full', markeredgewidth=0.0)
         if export:
-            plt.savefig(filename);
+            plt.savefig(filename, bbox_inches='tight')
         plt.show()
         return true
     else:
@@ -159,6 +167,6 @@ def drawmap(pts, filename, export=False):
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
-    if drawmap(data, image_filename, True):
+    if drawmap(np.array(data), image_filename, True):
         uploadMap(image_filename)
         addToPage(name, image_filename)
