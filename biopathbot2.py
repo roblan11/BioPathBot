@@ -88,7 +88,6 @@ def addLinkToOriginalPage(name):
         code+=primitive.string
 
     exist = re.findall("(\[\["+name+" BioPathBot\]\])",code)
-    print(exist)
     if(len(exist)==0):
         title = name
         content = "\n\n"+"[["+name+" BioPathBot]]"
@@ -132,12 +131,13 @@ def getDataFromPage(name):
             dateToAdd = date[0][0]
 
         # get place if exist
-        place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ]*(?=\]\])",line)
+        place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
              placeToAdd = place[0]
              location = geolocator.geocode(placeToAdd)
-             print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
+             if location:
+                 print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
 
         # if both the date and the location are available, append in data array
         if dateToAdd and location:
@@ -191,8 +191,6 @@ def drawmap(pts, filename, export=False):
         return True
     else:
         return False
-
-names = ["Henri Dunant"]
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
