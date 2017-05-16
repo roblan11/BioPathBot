@@ -77,20 +77,26 @@ def uploadMap(filename):
     # in case of error print the response
     # print(r4.text)
 
+# add link to biopath in original page if not already existing
 def addLinkToOriginalPage(name):
-    """title = "Henri Dunant"
-    content = name+" BioPathBot"
-    requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
-    payload={'action':'edit','assert':'user','format':'json','utf8':'','appendtext':content,'summary':summary,'title':title,'token':edit_token}
-    r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)"""
 
-    title = name + " BioPathBot"
-    content = "[[dhdjhdj]]"
-    pageToChange = requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
-    payload={'action':'edit','assert':'user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
-    r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
+    result=requests.post(baseurl+'api.php?action=query&titles='+name+'&export&exportnowrap')
+    soup=BeautifulSoup(result.text, "lxml")
+    #soup=BeautifulSoup(result.text)
+    code=''
+    for primitive in soup.findAll("text"):
+        code+=primitive.string
 
-addLinkToOriginalPage("hfhf")
+    exist = re.findall("(\[\["+name+" BioPathBot\]\])",code)
+    print(exist)
+    if(len(exist)==0):
+        title = name
+        content = "\n\n"+"[["+name+" BioPathBot]]"
+        requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
+        payload={'action':'edit','assert':'user','format':'json','utf8':'','appendtext':content,'summary':summary,'title':title,'token':edit_token}
+        r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
+
+addLinkToOriginalPage("Jean Tinguely")
 
 def addToPage(name, img):
     title = name + " BioPathBot"
@@ -186,7 +192,7 @@ def drawmap(pts, filename, export=False):
     else:
         return False
 
-
+names = ["Henri Dunant"]
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
@@ -194,3 +200,4 @@ for name in names:
     if drawmap(np.array(data), image_filename, True):
         uploadMap(image_filename)
         addToPage(name, image_filename)
+        addLinkToOriginalPage(name)
