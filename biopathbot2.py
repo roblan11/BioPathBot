@@ -108,6 +108,8 @@ def addToPage(name, img):
 # BioPathBot : add line of databiographie to the right page (time and space)
 def getDataFromPage(name):
     data = []
+    dates = []
+    places = []
     print("Page Created: " + name)
     result=requests.post(baseurl+'api.php?action=query&titles='+name+'&export&exportnowrap')
     soup=BeautifulSoup(result.text, "lxml")
@@ -129,12 +131,14 @@ def getDataFromPage(name):
 
         if len(date) != 0 :
             dateToAdd = date[0][0]
+            dates.append(dateToAdd)
 
         # get place if exist
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
              placeToAdd = place[0]
+             places.append(placeToAdd)
              location = geolocator.geocode(placeToAdd)
              if location:
                  print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
@@ -148,7 +152,7 @@ def getDataFromPage(name):
         foundDeces = re.findall("(\[\[Décès*\]\] de \[\["+name+")",line)
         if(len(foundDeces) != 0):
             break
-    return data
+    return [data, dates, places]
 
 # finds the minimal and maximal longitude and latitude
 def findCorners(pts):
@@ -170,32 +174,32 @@ def findCorners(pts):
     return [minlon, maxlon, minlat, maxlat]
 
 # draws the map, some points and the lines
-def drawmap(pts, filename, export=False):
+def drawmap(pts, dates, places, filename, export=False):
     n_pts = len(pts)
-    if n_pts != 0:
-        corners = findCorners(pts)
-        m = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
-        m.drawmapboundary(fill_color='0.6')
-        m.drawcountries(linewidth=1.0, color='0.6')
-        m.fillcontinents(color='white', lake_color='white')
-        for i in range(n_pts-1): # draw lines
-            for j in range(SEGMENTS):
-                start = pts[i] + (pts[i+1]-pts[i])*(j/SEGMENTS)
-                end = pts[i] + (pts[i+1]-pts[i])*((j+1)/SEGMENTS)
-                m.plot([start[0], end[0]], [start[1], end[1]], color=hsv_to_rgb((i+j/SEGMENTS)/n_pts, 1, 1))
-        for i in range(n_pts): # draw points
-            m.plot(pts[i][0], pts[i][1], marker='o', color=hsv_to_rgb(i/n_pts, 1, 1), fillstyle='full', markeredgewidth=0.0)
-        if export:
-            plt.savefig(filename, bbox_inches='tight')
-        plt.show()
-        return True
-    else:
-        return False
+    corners = findCorners(pts)
+    txt = ""
+    m = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
+    m.drawmapboundary(fill_color='0.6')
+    m.drawcountries(linewidth=1.0, color='0.6')
+    m.fillcontinents(color='white', lake_color='white')
+    for i in range(n_pts-1): # draw lines
+        for j in range(SEGMENTS):
+            start = pts[i] + (pts[i+1]-pts[i])*(j/SEGMENTS)
+            end = pts[i] + (pts[i+1]-pts[i])*((j+1)/SEGMENTS)
+            m.plot([start[0], end[0]], [start[1], end[1]], color=hsv_to_rgb((i+j/SEGMENTS)/n_pts, 1, 1))
+    for i in range(n_pts): # draw points
+        curr_color = hsv_to_rgb(i/n_pts, 1, 1)
+        m.plot(pts[i][0], pts[i][1], marker='o', color=curr_color, fillstyle='full', markeredgewidth=0.0)
+        txt += "<span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span> <br>"
+    if export:
+        plt.savefig(filename, bbox_inches='tight')
+    plt.show()
+    return txt
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
-    if drawmap(np.array(data), image_filename, True):
+    if len(data[0]) != 0:
+        legend = drawmap(np.array(data[0]), data[1], data[2], image_filename, True)
         uploadMap(image_filename)
         addToPage(name, image_filename)
-        addLinkToOriginalPage(name)

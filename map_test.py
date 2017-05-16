@@ -1,6 +1,10 @@
 # necessary imports
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
+from colorsys import hsv_to_rgb
+from matplotlib.colors import rgb2hex
+import numpy as np
+SEGMENTS = 100
 
 # draw plots inline rather than in a seperate window
 %matplotlib inline
@@ -28,19 +32,23 @@ def findCorners(pts):
 
 # draws the map, some points and the lines
 def drawmap(pts, filename, export=False):
+    n_pts = len(pts)
     corners = findCorners(pts)
     m = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
     m.drawmapboundary(fill_color='0.6')
     m.drawcountries(linewidth=1.0, color='0.6')
     m.fillcontinents(color='white', lake_color='white')
-    for p in pts: # draw points
-        x, y = m(p[0], p[1])
-        m.plot(x, y, 'bo')
-    for i in range(len(pts)-1): # draw lines
-        m.plot([pts[i][0], pts[i+1][0]], [pts[i][1], pts[i+1][1]], color='blue');
+    for i in range(n_pts-1): # draw lines
+        for j in range(SEGMENTS):
+            start = pts[i] + (pts[i+1]-pts[i])*(j/SEGMENTS)
+            end = pts[i] + (pts[i+1]-pts[i])*((j+1)/SEGMENTS)
+            m.plot([start[0], end[0]], [start[1], end[1]], color=hsv_to_rgb((i+j/SEGMENTS)/n_pts, 1, 1))
+    for i in range(n_pts): # draw points
+        m.plot(pts[i][0], pts[i][1], marker='o', color=hsv_to_rgb(i/n_pts, 1, 1), fillstyle='full', markeredgewidth=0.0)
     if export:
         plt.savefig(filename, bbox_inches='tight')
     plt.show()
 
-points = [[6, 46.5], [7, 47], [6, 47], [9, 46], [10, 48], [7.5, 80]]
-drawmap(points, "map1.png", True)
+# points to test
+points = [[1, 1], [1, 10], [2, 1], [2, 10], [3, 1], [3, 10], [4, 1], [4, 10], [5, 1], [5, 10], [6, 1], [6, 10], [7, 1], [7, 10], [8, 1], [8, 10], [9, 1], [9, 10], [10, 1], [10, 10]]
+drawmap(np.array(points), "map1.png", True)
