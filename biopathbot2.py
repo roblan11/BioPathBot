@@ -9,7 +9,7 @@ from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
 # draw plots inline rather than in a seperate window
-%matplotlib inline
+#%matplotlib inline
 # draw plots bigger
 plt.rcParams["figure.figsize"] = [20.0, 10.0]
 
@@ -25,9 +25,10 @@ for user in protected_logins:
     soup=BeautifulSoup(result.content,'lxml')
     for primitive in soup.usercontribs.findAll('item'):
         liste_pages.append(primitive['title'])
-        print(primitive['title'])
 
 names=list(set(liste_pages))
+for title in names:
+    print(title)
 
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
@@ -138,22 +139,26 @@ def findCorners(pts):
 
 # draws the map, some points and the lines
 def drawmap(pts, filename, export=False):
-    corners = findCorners(pts)
-    m1 = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
-    m1.drawcountries(linewidth=1.0, color='red')
-    for p in pts: # draw points
-        x, y = m1(p[0], p[1])
-        m1.plot(x, y, 'bo')
-    for i in range(len(pts)-1): # draw lines
-        m1.plot([pts[i][0], pts[i+1][0]], [pts[i][1], pts[i+1][1]], color='blue');
-    if export:
-        plt.savefig(filename);
-    plt.show()
+    if pts.amount() != 0:
+        corners = findCorners(pts)
+        m1 = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
+        m1.drawcountries(linewidth=1.0, color='red')
+        for p in pts: # draw points
+            x, y = m1(p[0], p[1])
+            m1.plot(x, y, 'bo')
+        for i in range(len(pts)-1): # draw lines
+            m1.plot([pts[i][0], pts[i+1][0]], [pts[i][1], pts[i+1][1]], color='blue');
+        if export:
+            plt.savefig(filename);
+        plt.show()
+        return true
+    else:
+        return false
 
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
-    drawmap(data, image_filename, True)
-    uploadMap(image_filename)
-    addToPage(name, image_filename)
+    if drawmap(data, image_filename, True):
+        uploadMap(image_filename)
+        addToPage(name, image_filename)
