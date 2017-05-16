@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import math
+import numpy as np
 import datetime
 from geopy.geocoders import Nominatim
 from mpl_toolkits.basemap import Basemap
@@ -12,11 +13,11 @@ from matplotlib.colors import rgb2hex
 SEGMENTS = 100
 
 # draw plots inline rather than in a seperate window
-%matplotlib inline
+# %matplotlib inline
 # draw plots bigger
 plt.rcParams["figure.figsize"] = [20.0, 10.0]
 
-user='BioPathBot'
+bot_user='BioPathBot'
 passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
 summary='Wikipastbot update'
@@ -27,7 +28,9 @@ for user in protected_logins:
     result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date)
     soup=BeautifulSoup(result.content,'lxml')
     for primitive in soup.usercontribs.findAll('item'):
-        liste_pages.append(primitive['title'])
+        title = primitive['title']
+        if 'Fichier' not in title and 'BioPathBot' not in title:
+            liste_pages.append(primitive['title'])
 
 names=list(set(liste_pages))
 for title in names:
@@ -39,7 +42,7 @@ r1=requests.post(baseurl + 'api.php', data=payload)
 
 #login confirm
 login_token=r1.json()['query']['tokens']['logintoken']
-payload={'action':'login','format':'json','utf8':'','lgname':user,'lgpassword':passw,'lgtoken':login_token}
+payload={'action':'login','format':'json','utf8':'','lgname':bot_user,'lgpassword':passw,'lgtoken':login_token}
 r2=requests.post(baseurl + 'api.php', data=payload, cookies=r1.cookies)
 
 #get edit token2
@@ -51,7 +54,7 @@ edit_cookie=r2.cookies.copy()
 edit_cookie.update(r3.cookies)
 
 #setup geolocator
-geolocator = Nominatim(timeout=10)
+geolocator = Nominatim(timeout=30)
 
 
 # upload config
@@ -72,8 +75,7 @@ def uploadMap(filename):
     r4=requests.post(baseurl+'api.php',data=payload,files=files,cookies=edit_cookie)
 
     # in case of error print the response
-    #print(r4.text)
-
+    # print(r4.text)
 
 def addLinkToOriginalPage(name):
     """title = "Henri Dunant"
@@ -94,13 +96,14 @@ def addToPage(name, img):
     title = name + " BioPathBot"
     content = "[[Fichier: "+ img +"]]"
     pageToChange = requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
-    payload={'action':'edit','assert':'user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
+    payload={'action':'edit','assert':'bot_user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
     r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
 
 # @TODO not get post-mortem data -> check Décès
 # BioPathBot : add line of databiographie to the right page (time and space)
 def getDataFromPage(name):
     data = []
+    print("Page Created: " + name)
     result=requests.post(baseurl+'api.php?action=query&titles='+name+'&export&exportnowrap')
     soup=BeautifulSoup(result.text, "lxml")
     #soup=BeautifulSoup(result.text)
@@ -128,6 +131,7 @@ def getDataFromPage(name):
         if len(place) != 0:
              placeToAdd = place[0]
              location = geolocator.geocode(placeToAdd)
+             print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
 
         # if both the date and the location are available, append in data array
         if dateToAdd and location:
@@ -178,9 +182,9 @@ def drawmap(pts, filename, export=False):
         if export:
             plt.savefig(filename, bbox_inches='tight')
         plt.show()
-        return true
+        return True
     else:
-        return false
+        return False
 
 
 
