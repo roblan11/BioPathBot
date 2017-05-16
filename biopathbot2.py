@@ -75,6 +75,21 @@ def uploadMap(filename):
     #print(r4.text)
 
 
+def addLinkToOriginalPage(name):
+    """title = "Henri Dunant"
+    content = name+" BioPathBot"
+    requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
+    payload={'action':'edit','assert':'user','format':'json','utf8':'','appendtext':content,'summary':summary,'title':title,'token':edit_token}
+    r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)"""
+
+    title = name + " BioPathBot"
+    content = "[[dhdjhdj]]"
+    pageToChange = requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
+    payload={'action':'edit','assert':'user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
+    r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
+
+addLinkToOriginalPage("hfhf")
+
 def addToPage(name, img):
     title = name + " BioPathBot"
     content = "[[Fichier: "+ img +"]]"
@@ -118,8 +133,12 @@ def getDataFromPage(name):
         if dateToAdd and location:
             dataToAdd = [location.longitude,location.latitude];
             data.append(dataToAdd);
-    return data
 
+        # stop getting data
+        foundDeces = re.findall("(\[\[Décès*\]\] de \[\["+name+")",line)
+        if(len(foundDeces) != 0):
+            break
+    return data
 
 # finds the minimal and maximal longitude and latitude
 def findCorners(pts):
@@ -162,6 +181,7 @@ def drawmap(pts, filename, export=False):
         return true
     else:
         return false
+
 
 
 for name in names:
