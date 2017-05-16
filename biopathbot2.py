@@ -203,3 +203,4 @@ for name in names:
         legend = drawmap(np.array(data[0]), data[1], data[2], image_filename, True)
         uploadMap(image_filename)
         addToPage(name, image_filename)
+        addLinkToOriginalPage(name)
