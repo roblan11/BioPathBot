@@ -101,8 +101,9 @@ def addToPage(name, img):
     title = name + " BioPathBot"
     content = "[[Fichier: "+ img +"]]"
     pageToChange = requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
-    payload={'action':'edit','assert':'bot_user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
+    payload={'action':'edit','assert':'user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
     r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
+    print(r4.text)
 
 # @TODO not get post-mortem data -> check Décès
 # BioPathBot : add line of databiographie to the right page (time and space)
@@ -193,7 +194,7 @@ def drawmap(pts, filename, export=False):
     else:
         return False
 
-names = ["1700"]
+names = ["Charles de Gaulle"]
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
