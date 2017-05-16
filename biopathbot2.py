@@ -114,7 +114,8 @@ def getDataFromPage(name):
     #soup=BeautifulSoup(result.text)
     code=''
     for primitive in soup.findAll("text"):
-        code+=primitive.string
+        if primitive.string:
+            code+=primitive.string
 
     # split on list (*)
     lines = code.split("*")
@@ -192,6 +193,7 @@ def drawmap(pts, filename, export=False):
     else:
         return False
 
+names = ["1700"]
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
