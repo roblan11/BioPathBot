@@ -22,7 +22,7 @@ passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
 summary='Wikipastbot update'
 protected_logins=["Frederickaplan","Maud","Vbuntinx","Testbot","IB","SourceBot","PageUpdaterBot","Orthobot","BioPathBot","ChronoBOT","Amonbaro","AntoineL","AntoniasBanderos","Arnau","Arnaudpannatier","Aureliver","Brunowicht","Burgerpop","Cedricviaccoz","Christophe","Claudioloureiro","Ghislain","Gregoire3245","Hirtg","Houssm","Icebaker","JenniCin","JiggyQ","JulienB","Kl","Kperrard","Leandro Kieliger","Marcus","Martin","MatteoGiorla","Mireille","Mj2905","Musluoglucem","Nacho","Nameless","Nawel","O'showa","PA","Qantik","QuentinB","Raphael.barman","Roblan11","Romain Fournier","Sbaaa","Snus","Sonia","Tboyer","Thierry","Titi","Vlaedr","Wanda"]
-depuis_date='2017-05-02T16:00:00Z'
+depuis_date='2016-05-02T16:00:00Z'
 liste_pages=[]
 for user in protected_logins:
     result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date)
@@ -195,10 +195,9 @@ def drawmap(pts, dates, places, filename, export=False):
         txt += "<span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span> <br>"
     if export:
         plt.savefig(filename, bbox_inches='tight')
-    plt.show()
+    # plt.show()
     return txt
 
-names = ["Charles de Gaulle"]
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
