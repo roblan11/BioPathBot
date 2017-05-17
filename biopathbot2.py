@@ -24,9 +24,8 @@ bot_user='BioPathBot'
 passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
 summary='Wikipastbot update'
-'''
 protected_logins=["Frederickaplan","Maud","Vbuntinx","Testbot","IB","SourceBot","PageUpdaterBot","Orthobot","BioPathBot","ChronoBOT","Amonbaro","AntoineL","AntoniasBanderos","Arnau","Arnaudpannatier","Aureliver","Brunowicht","Burgerpop","Cedricviaccoz","Christophe","Claudioloureiro","Ghislain","Gregoire3245","Hirtg","Houssm","Icebaker","JenniCin","JiggyQ","JulienB","Kl","Kperrard","Leandro Kieliger","Marcus","Martin","MatteoGiorla","Mireille","Mj2905","Musluoglucem","Nacho","Nameless","Nawel","O'showa","PA","Qantik","QuentinB","Raphael.barman","Roblan11","Romain Fournier","Sbaaa","Snus","Sonia","Tboyer","Thierry","Titi","Vlaedr","Wanda"]
-depuis_date='2016-05-02T16:00:00Z'
+depuis_date='2017-02-02T16:00:00Z'
 liste_pages=[]
 for user in protected_logins:
     result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date)
@@ -39,7 +38,6 @@ for user in protected_logins:
 names=list(set(liste_pages))
 for title in names:
     print(title)
-'''
 
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
@@ -254,6 +252,8 @@ def drawmap(pts, dates, places, filename, export=False):
     n_pts = len(pts)
     corners = findCorners(pts)
     txt = ""
+
+    # whole world otherwise the text bbox dimensions are wrong
     m = Basemap()
     m.drawmapboundary(fill_color='0.6')
     m.drawcountries(linewidth=1.0, color='0.6')
@@ -287,6 +287,6 @@ for name in names:
     data = getDataFromPage(name)
     if len(data[0]) != 0:
         legend = drawmap(np.array(data[0]), data[1], data[2], image_filename, True)
-        # uploadMap(image_filename)
-        # addToPage(name, image_filename)
-        # addLinkToOriginalPage(name)
+        uploadMap(image_filename)
+        addToPage(name, image_filename)
+        addLinkToOriginalPage(name)
