@@ -245,7 +245,7 @@ def adjust_text(texts, text_width, text_height,num_iterations=20,eta=0.5):
 
     # delete text objects and create annotations on the readjusted positions
     for i in range(len(texts)):
-        a = plt.annotate(texts[i].get_text(), xy=texts[i].get_position(), xytext=text_pos[i], fontsize=8, 
+        a = plt.annotate(texts[i].get_text(), xy=texts[i].get_position(), xytext=text_pos[i],
             arrowprops=dict(arrowstyle="-", color='k', lw=0.5, alpha=0.6),bbox=dict(facecolor='b', alpha=0.2))
 
         # plt.plot(text_pos[i][0], text_pos[i][1], marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
@@ -307,7 +307,7 @@ def drawmap(pts, dates, places, filename, export=False):
         curr_color = hsv_to_rgb(i/n_pts, 1, 1)
         x,y = m(pts[i][0], pts[i][1])
         m.plot(x, y, marker='o', color=curr_color, fillstyle='full', markeredgewidth=0.0,alpha=0.7)
-        texts.append(plt.text(x, y, dates[i], fontsize=8))
+        texts.append(plt.text(x, y, dates[i]))
         txt += "<span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span> <br>"
     adjust_text(texts, 1, 0.4)
 
@@ -316,8 +316,6 @@ def drawmap(pts, dates, places, filename, export=False):
     plt.show()
     return txt
 
-# test 
-names = ["Richard Wagner", "Magic Johnson", "Philippe Suchard", "Alain Morisod", "Hergé", "Gioachino Rossini", "Thomas Edison", "Jean Tinguely", "Ernesto Rafael Guevara", "Bill Gates", "Jacques-Yves Cousteau", "Nicolas Bouvier", "Le Corbusier", "Nicéphore Niépce", "Phil Collins", "Winston Churchill", "Élisabeth II", "Bobby Fischer", "Lénine", "Paul Klee", "Paul Maillefer", "Albert Einstein", "Franklin D. Roosevelt", "Joseph Staline", "Claude Nicollier", "Adolf Hitler", "Fidel Castro", "Steffi Graf"]
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
