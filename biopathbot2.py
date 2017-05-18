@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from colorsys import hsv_to_rgb
 from matplotlib.colors import rgb2hex
 import pdb
+import itertools
 SEGMENTS = 100
 
 # draw plots inline rather than in a seperate window
@@ -24,6 +25,7 @@ bot_user='BioPathBot'
 passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
 summary='Wikipastbot update'
+'''
 protected_logins=["Frederickaplan","Maud","Vbuntinx","Testbot","IB","SourceBot","PageUpdaterBot","Orthobot","BioPathBot","ChronoBOT","Amonbaro","AntoineL","AntoniasBanderos","Arnau","Arnaudpannatier","Aureliver","Brunowicht","Burgerpop","Cedricviaccoz","Christophe","Claudioloureiro","Ghislain","Gregoire3245","Hirtg","Houssm","Icebaker","JenniCin","JiggyQ","JulienB","Kl","Kperrard","Leandro Kieliger","Marcus","Martin","MatteoGiorla","Mireille","Mj2905","Musluoglucem","Nacho","Nameless","Nawel","O'showa","PA","Qantik","QuentinB","Raphael.barman","Roblan11","Romain Fournier","Sbaaa","Snus","Sonia","Tboyer","Thierry","Titi","Vlaedr","Wanda"]
 depuis_date='2017-02-02T16:00:00Z'
 liste_pages=[]
@@ -38,6 +40,7 @@ for user in protected_logins:
 names=list(set(liste_pages))
 for title in names:
     print(title)
+'''
 
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
@@ -57,7 +60,6 @@ edit_cookie=r2.cookies.copy()
 edit_cookie.update(r3.cookies)
 
 #setup geolocator
-geolocator = Nominatim(timeout=60)
 
 
 # upload config
@@ -142,11 +144,14 @@ def getDataFromPage(name):
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
-             placeToAdd = place[0]
-             places.append(placeToAdd)
-             location = geolocator.geocode(placeToAdd)
-             if location:
-                 print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
+            placeToAdd = place[0]
+            places.append(placeToAdd)
+            if placeToAdd == "Rome": 
+                placeToAdd = "Roma"
+            geolocator = Nominatim(timeout=60)
+            location = geolocator.geocode(placeToAdd)
+            if location:
+                print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
 
         # if both the date and the location are available, append in data array
         if dateToAdd and location:
@@ -184,6 +189,8 @@ def findCorners(pts):
 # finds the intersection of the segment inp-outp and the box
 def line_box(inp, hs, outp):
     dir = outp - inp
+    if dir[0] == 0: dir[0] = np.nextafter(0, 1)
+    if dir[1] == 0: dir[1] = np.nextafter(0, 1)
     ref = np.array([np.copysign(hs[0],dir[0]), np.copysign(hs[1],dir[1])])
     dir_x = np.array([(ref[1]/dir[1])*dir[0], ref[1]])
     dir_y = np.array([ref[0], (ref[0]/dir[0])*dir[1]])
@@ -199,7 +206,7 @@ def repulsion_force(pos1, pos2, bbox1, bbox2):
 
     # if both same position, choose a random direction
     if all(c1==c2):
-        return np.random.rand(2)-np.array([0.5,0.5])
+        return (np.random.rand(2)-np.array([0.5,0.5]))*hs1[1]
 
     b1 = line_box(c1, hs1*1.5, c2)
     b2 = line_box(c2, hs2*1.5, c1)
@@ -229,21 +236,23 @@ def adjust_text(texts, text_width, text_height,num_iterations=20,eta=0.5):
     # readjust text labels
     for _ in range(num_iterations):
         random.shuffle(indices)
-        for i in indices:
-            for j in indices:
-                if i == j: 
-                    continue
-                # pdb.set_trace()
-                f = repulsion_force(text_pos[i], text_pos[j], bboxes[i], bboxes[j])
-                text_pos[i] += f*eta
-                if np.linalg.norm(f) == 0:
-                    colliding[i] = False
-                else:
-                    colliding[i] = True
+        for (i,j) in itertools.combinations(indices, 2):
+            if i == j: 
+                continue
+            # pdb.set_trace()
+            f = repulsion_force(text_pos[i], text_pos[j], bboxes[i], bboxes[j])
+            text_pos[i] += f*eta
 
     # delete text objects and create annotations on the readjusted positions
     for i in range(len(texts)):
-        a = plt.annotate(texts[i].get_text(), xy=texts[i].get_position(), xytext=text_pos[i], arrowprops=dict(arrowstyle="-", color='k', lw=0.5, alpha=0.6),bbox=dict(facecolor='b', alpha=0.2))
+        a = plt.annotate(texts[i].get_text(), xy=texts[i].get_position(), xytext=text_pos[i], fontsize=8, 
+            arrowprops=dict(arrowstyle="-", color='k', lw=0.5, alpha=0.6),bbox=dict(facecolor='b', alpha=0.2))
+
+        # plt.plot(text_pos[i][0], text_pos[i][1], marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        # plt.plot(text_pos[i][0]+bboxes[i].width, text_pos[i][1], marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        # plt.plot(text_pos[i][0]+bboxes[i].width, text_pos[i][1]+bboxes[i].height, marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        # plt.plot(text_pos[i][0], text_pos[i][1]+bboxes[i].height, marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+
         a.draggable();
         texts[i].remove()
 
@@ -253,8 +262,36 @@ def drawmap(pts, dates, places, filename, export=False):
     corners = findCorners(pts)
     txt = ""
 
-    # whole world otherwise the text bbox dimensions are wrong
-    m = Basemap()
+    # ratio correction to 2:1
+    lon_width = min((corners[1]-corners[0]+60), 360)
+    lat_width = min((corners[3]-corners[2]+20), 180)
+    lon_center = (corners[1]+corners[0])/2
+    lat_center = (corners[3]+corners[2])/2
+    if lon_width > lat_width*2:
+        lat_width = lon_width/2
+    else:
+        lon_width = lat_width*2
+
+    corners[0] = lon_center-lon_width/2
+    corners[1] = lon_center+lon_width/2
+    corners[2] = lat_center-lat_width/2
+    corners[3] = lat_center+lat_width/2
+
+    if corners[0] < -180:
+        corners[1] -= corners[0]-(-180)
+        corners[0] = -180
+    elif corners[1] > 180:
+        corners[0] -= corners[1]-180
+        corners[1] = 180
+    if corners[2] < -90:
+        corners[3] -= corners[2]-(-90)
+        corners[2] = -90
+    elif corners[3] > 90:
+        corners[2] -= corners[3]-90
+        corners[3] = 90
+
+    # draw map background
+    m = Basemap(llcrnrlon=corners[0], llcrnrlat=corners[2], urcrnrlon=corners[1], urcrnrlat=corners[3], resolution='i')
     m.drawmapboundary(fill_color='0.6')
     m.drawcountries(linewidth=1.0, color='0.6')
     m.fillcontinents(color='white', lake_color='white')
@@ -270,17 +307,17 @@ def drawmap(pts, dates, places, filename, export=False):
         curr_color = hsv_to_rgb(i/n_pts, 1, 1)
         x,y = m(pts[i][0], pts[i][1])
         m.plot(x, y, marker='o', color=curr_color, fillstyle='full', markeredgewidth=0.0,alpha=0.7)
-        texts.append(plt.text(x, y, dates[i]))
+        texts.append(plt.text(x, y, dates[i], fontsize=8))
         txt += "<span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span> <br>"
     adjust_text(texts, 1, 0.4)
 
-    plt.plot(10, 10)
     if export:
         plt.savefig(filename, bbox_inches='tight')
     plt.show()
     return txt
 
-names=["Jean Tinguely"]
+# test 
+names = ["Richard Wagner", "Magic Johnson", "Philippe Suchard", "Alain Morisod", "Hergé", "Gioachino Rossini", "Thomas Edison", "Jean Tinguely", "Ernesto Rafael Guevara", "Bill Gates", "Jacques-Yves Cousteau", "Nicolas Bouvier", "Le Corbusier", "Nicéphore Niépce", "Phil Collins", "Winston Churchill", "Élisabeth II", "Bobby Fischer", "Lénine", "Paul Klee", "Paul Maillefer", "Albert Einstein", "Franklin D. Roosevelt", "Joseph Staline", "Claude Nicollier", "Adolf Hitler", "Fidel Castro", "Steffi Graf"]
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
