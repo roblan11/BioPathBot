@@ -13,8 +13,11 @@ import matplotlib.pyplot as plt
 from colorsys import hsv_to_rgb
 from matplotlib.colors import rgb2hex
 import pdb
+import time
 import itertools
+from geopy.exc import GeocoderTimedOut
 SEGMENTS = 100
+
 
 # draw plots inline rather than in a seperate window
 # %matplotlib inline
@@ -40,8 +43,8 @@ for user in protected_logins:
 names=list(set(liste_pages))
 for title in names:
     print(title)
-'''
 
+'''
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
 r1=requests.post(baseurl + 'api.php', data=payload)
@@ -60,7 +63,7 @@ edit_cookie=r2.cookies.copy()
 edit_cookie.update(r3.cookies)
 
 #setup geolocator
-
+geolocator = Nominatim(timeout=30)
 
 # upload config
 def uploadMap(filename):
@@ -148,8 +151,18 @@ def getDataFromPage(name):
             places.append(placeToAdd)
             if placeToAdd == "Rome": 
                 placeToAdd = "Roma"
-            geolocator = Nominatim(timeout=60)
-            location = geolocator.geocode(placeToAdd)
+
+            for retries in range(5):
+                try:
+                    location = geolocator.geocode(placeToAdd)
+                except GeocoderTimedOut:
+                    continue
+                break
+
+            # geopy usage policy max 1 request/sec
+            # https://operations.osmfoundation.org/policies/nominatim/
+            time.sleep(2)
+
             if location:
                 print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
 
@@ -310,12 +323,12 @@ def drawmap(pts, dates, places, filename, export=False):
         texts.append(plt.text(x, y, dates[i]))
         txt += "<span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span> <br>"
     adjust_text(texts, 1, 0.4)
-
     if export:
         plt.savefig(filename, bbox_inches='tight')
-    plt.show()
+        plt.close()
     return txt
 
+names = list(set(["Auguste Piccard", "Wolfgang Pauli", "Michael Schumacher", "Charles de Gaulle", "Donald Trump", "Gustave Ador", "Henry Dunant", "Sigmund Freud", "Henri Dès", "Arthur Honegger", "Daniel Brélaz", "Franz Beckenbauer", "Roman Polanski", "Benito Mussolini", "Guillaume Henri Dufour", "Mao Zedong", "Walter Mittelholzer", "Robert Oppenheimer", "Richard Wagner", "Magic Johnson", "Philippe Suchard", "Alain Morisod", "Hergé", "Gioachino Rossini", "Thomas Edison", "Jean Tinguely", "Ernesto Rafael Guevara", "Bill Gates", "Jacques-Yves Cousteau", "Nicolas Bouvier", "Le Corbusier", "Nicéphore Niépce", "Phil Collins", "Winston Churchill", "Élisabeth II", "Bobby Fischer", "Lénine", "Paul Klee", "Paul Maillefer", "Albert Einstein", "Franklin D. Roosevelt", "Joseph Staline", "Claude Nicollier", "Adolf Hitler", "Fidel Castro", "Steffi Graf"]))
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
