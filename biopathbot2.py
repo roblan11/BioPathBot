@@ -28,12 +28,11 @@ bot_user='BioPathBot'
 passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
 summary='Wikipastbot update'
-'''
 protected_logins=["Frederickaplan","Maud","Vbuntinx","Testbot","IB","SourceBot","PageUpdaterBot","Orthobot","BioPathBot","ChronoBOT","Amonbaro","AntoineL","AntoniasBanderos","Arnau","Arnaudpannatier","Aureliver","Brunowicht","Burgerpop","Cedricviaccoz","Christophe","Claudioloureiro","Ghislain","Gregoire3245","Hirtg","Houssm","Icebaker","JenniCin","JiggyQ","JulienB","Kl","Kperrard","Leandro Kieliger","Marcus","Martin","MatteoGiorla","Mireille","Mj2905","Musluoglucem","Nacho","Nameless","Nawel","O'showa","PA","Qantik","QuentinB","Raphael.barman","Roblan11","Romain Fournier","Sbaaa","Snus","Sonia","Tboyer","Thierry","Titi","Vlaedr","Wanda"]
 depuis_date='2017-02-02T16:00:00Z'
 liste_pages=[]
 for user in protected_logins:
-    result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date)
+    result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date+'&ucshow=new')
     soup=BeautifulSoup(result.content,'lxml')
     for primitive in soup.usercontribs.findAll('item'):
         title = primitive['title']
@@ -44,7 +43,6 @@ names=list(set(liste_pages))
 for title in names:
     print(title)
 
-'''
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
 r1=requests.post(baseurl + 'api.php', data=payload)
@@ -276,8 +274,8 @@ def drawmap(pts, dates, places, filename, export=False):
     txt = ""
 
     # ratio correction to 2:1
-    lon_width = min((corners[1]-corners[0]+60), 360)
-    lat_width = min((corners[3]-corners[2]+20), 180)
+    lon_width = min((corners[1]-corners[0]+10)*1.1, 360)
+    lat_width = min((corners[3]-corners[2]+10)*1.1, 180)
     lon_center = (corners[1]+corners[0])/2
     lat_center = (corners[3]+corners[2])/2
     if lon_width > lat_width*2:
@@ -327,8 +325,6 @@ def drawmap(pts, dates, places, filename, export=False):
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     return txt
-
-names = list(set(["Auguste Piccard", "Wolfgang Pauli", "Michael Schumacher", "Charles de Gaulle", "Donald Trump", "Gustave Ador", "Henry Dunant", "Sigmund Freud", "Henri Dès", "Arthur Honegger", "Daniel Brélaz", "Franz Beckenbauer", "Roman Polanski", "Benito Mussolini", "Guillaume Henri Dufour", "Mao Zedong", "Walter Mittelholzer", "Robert Oppenheimer", "Richard Wagner", "Magic Johnson", "Philippe Suchard", "Alain Morisod", "Hergé", "Gioachino Rossini", "Thomas Edison", "Jean Tinguely", "Ernesto Rafael Guevara", "Bill Gates", "Jacques-Yves Cousteau", "Nicolas Bouvier", "Le Corbusier", "Nicéphore Niépce", "Phil Collins", "Winston Churchill", "Élisabeth II", "Bobby Fischer", "Lénine", "Paul Klee", "Paul Maillefer", "Albert Einstein", "Franklin D. Roosevelt", "Joseph Staline", "Claude Nicollier", "Adolf Hitler", "Fidel Castro", "Steffi Graf"]))
 
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
