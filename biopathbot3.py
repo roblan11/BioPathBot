@@ -5,12 +5,19 @@ import re
 import math
 import numpy as np
 import datetime
+import random
+import copy
 from geopy.geocoders import Nominatim
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from colorsys import hsv_to_rgb
 from matplotlib.colors import rgb2hex
+import pdb
+import time
+import itertools
+from geopy.exc import GeocoderTimedOut
 SEGMENTS = 100
+
 
 # draw plots inline rather than in a seperate window
 # %matplotlib inline
@@ -22,10 +29,10 @@ passw='chkiroju'
 baseurl='http://wikipast.epfl.ch/wikipast/'
 summary='Wikipastbot update'
 protected_logins=["Frederickaplan","Maud","Vbuntinx","Testbot","IB","SourceBot","PageUpdaterBot","Orthobot","BioPathBot","ChronoBOT","Amonbaro","AntoineL","AntoniasBanderos","Arnau","Arnaudpannatier","Aureliver","Brunowicht","Burgerpop","Cedricviaccoz","Christophe","Claudioloureiro","Ghislain","Gregoire3245","Hirtg","Houssm","Icebaker","JenniCin","JiggyQ","JulienB","Kl","Kperrard","Leandro Kieliger","Marcus","Martin","MatteoGiorla","Mireille","Mj2905","Musluoglucem","Nacho","Nameless","Nawel","O'showa","PA","Qantik","QuentinB","Raphael.barman","Roblan11","Romain Fournier","Sbaaa","Snus","Sonia","Tboyer","Thierry","Titi","Vlaedr","Wanda"]
-depuis_date='2016-05-02T16:00:00Z'
+depuis_date='2017-02-02T16:00:00Z'
 liste_pages=[]
 for user in protected_logins:
-    result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date)
+    result=requests.post(baseurl+'api.php?action=query&list=usercontribs&ucuser='+user+'&format=xml&ucend='+depuis_date+'&ucshow=new')
     soup=BeautifulSoup(result.content,'lxml')
     for primitive in soup.usercontribs.findAll('item'):
         title = primitive['title']
@@ -55,7 +62,6 @@ edit_cookie.update(r3.cookies)
 
 #setup geolocator
 geolocator = Nominatim(timeout=30)
-
 
 # upload config
 def uploadMap(filename):
@@ -140,11 +146,24 @@ def getDataFromPage(name):
             place = re.findall("(?<=\/\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
-             placeToAdd = place[0]
-             places.append(placeToAdd)
-             location = geolocator.geocode(placeToAdd)
-             if location:
-                 print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
+            placeToAdd = place[0]
+            places.append(placeToAdd)
+            if placeToAdd == "Rome": 
+                placeToAdd = "Roma"
+
+            for retries in range(5):
+                try:
+                    location = geolocator.geocode(placeToAdd)
+                except GeocoderTimedOut:
+                    continue
+                break
+
+            # geopy usage policy max 1 request/sec
+            # https://operations.osmfoundation.org/policies/nominatim/
+            time.sleep(2)
+
+            if location:
+                print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
 
         # if both the date and the location are available, append in data array
         if dateToAdd and location:
@@ -176,27 +195,136 @@ def findCorners(pts):
 
     return [minlon, maxlon, minlat, maxlat]
 
+# inp: point inside the box
+# hs: half dimensions of the box
+# outp: another point
+# finds the intersection of the segment inp-outp and the box
+def line_box(inp, hs, outp):
+    dir = outp - inp
+    if dir[0] == 0: dir[0] = np.nextafter(0, 1)
+    if dir[1] == 0: dir[1] = np.nextafter(0, 1)
+    ref = np.array([np.copysign(hs[0],dir[0]), np.copysign(hs[1],dir[1])])
+    dir_x = np.array([(ref[1]/dir[1])*dir[0], ref[1]])
+    dir_y = np.array([ref[0], (ref[0]/dir[0])*dir[1]])
+    fdir = dir_x if np.linalg.norm(dir_x) < np.linalg.norm(dir_y) else dir_y
+    return inp+fdir
+
+# computes the repulsion force if 2 boxes are overlapping
+def repulsion_force(pos1, pos2, bbox1, bbox2):
+    hs1 = np.array([bbox1.width,bbox1.height])/2
+    hs2 = np.array([bbox2.width,bbox2.height])/2
+    c1 = pos1 + hs1
+    c2 = pos2 + hs2
+
+    # if both same position, choose a random direction
+    if all(c1==c2):
+        return (np.random.rand(2)-np.array([0.5,0.5]))*hs1[1]
+
+    b1 = line_box(c1, hs1*1.5, c2)
+    b2 = line_box(c2, hs2*1.5, c1)
+
+    # if pointing in the opposite direction
+    if np.dot(b1-c1,b2-b1) < 0:
+        return b2-b1
+    return np.zeros(2)
+
+# readjust text labels so there is no overlap
+def adjust_text(texts, text_width, text_height,num_iterations=20,eta=0.5):
+    text_pos = [np.array(text.get_position()) for text in texts]
+    indices = list(range(len(texts)))
+    colliding = [True for text in texts]
+
+    # get text bounding boxes
+    f = plt.gcf()
+    r = f.canvas.get_renderer()
+    ax = plt.gca()
+    bboxes = [text.get_window_extent(renderer=r).transformed(ax.transData.inverted()) for text in texts]
+
+    # center text pos on markers
+    for i in range(len(texts)):
+        text_pos[i][0] -= bboxes[i].width/2
+        text_pos[i][1] -= bboxes[i].height/2
+
+    # readjust text labels
+    for _ in range(num_iterations):
+        random.shuffle(indices)
+        for (i,j) in itertools.combinations(indices, 2):
+            if i == j: 
+                continue
+            # pdb.set_trace()
+            f = repulsion_force(text_pos[i], text_pos[j], bboxes[i], bboxes[j])
+            text_pos[i] += f*eta
+
+    # delete text objects and create annotations on the readjusted positions
+    for i in range(len(texts)):
+        a = plt.annotate(texts[i].get_text(), xy=texts[i].get_position(), xytext=text_pos[i],
+            arrowprops=dict(arrowstyle="-", color='k', lw=0.5, alpha=0.6),bbox=dict(facecolor='b', alpha=0.2))
+
+        # plt.plot(text_pos[i][0], text_pos[i][1], marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        # plt.plot(text_pos[i][0]+bboxes[i].width, text_pos[i][1], marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        # plt.plot(text_pos[i][0]+bboxes[i].width, text_pos[i][1]+bboxes[i].height, marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        # plt.plot(text_pos[i][0], text_pos[i][1]+bboxes[i].height, marker='o',color='r', fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+
+        a.draggable();
+        texts[i].remove()
+
 # draws the map, some points and the lines
 def drawmap(pts, dates, places, filename, export=False):
     n_pts = len(pts)
     corners = findCorners(pts)
     txt = ""
-    m = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
+
+    # ratio correction to 2:1
+    lon_width = min((corners[1]-corners[0]+10)*1.1, 360)
+    lat_width = min((corners[3]-corners[2]+10)*1.1, 180)
+    lon_center = (corners[1]+corners[0])/2
+    lat_center = (corners[3]+corners[2])/2
+    if lon_width > lat_width*2:
+        lat_width = lon_width/2
+    else:
+        lon_width = lat_width*2
+
+    corners[0] = lon_center-lon_width/2
+    corners[1] = lon_center+lon_width/2
+    corners[2] = lat_center-lat_width/2
+    corners[3] = lat_center+lat_width/2
+
+    if corners[0] < -180:
+        corners[1] -= corners[0]-(-180)
+        corners[0] = -180
+    elif corners[1] > 180:
+        corners[0] -= corners[1]-180
+        corners[1] = 180
+    if corners[2] < -90:
+        corners[3] -= corners[2]-(-90)
+        corners[2] = -90
+    elif corners[3] > 90:
+        corners[2] -= corners[3]-90
+        corners[3] = 90
+
+    # draw map background
+    m = Basemap(llcrnrlon=corners[0], llcrnrlat=corners[2], urcrnrlon=corners[1], urcrnrlat=corners[3], resolution='i')
     m.drawmapboundary(fill_color='0.6')
     m.drawcountries(linewidth=1.0, color='0.6')
     m.fillcontinents(color='white', lake_color='white')
+    texts = []
+    '''
     for i in range(n_pts-1): # draw lines
         for j in range(SEGMENTS):
             start = pts[i] + (pts[i+1]-pts[i])*(j/SEGMENTS)
             end = pts[i] + (pts[i+1]-pts[i])*((j+1)/SEGMENTS)
             m.plot([start[0], end[0]], [start[1], end[1]], color=hsv_to_rgb((i+j/SEGMENTS)/n_pts, 1, 1))
+    '''
     for i in range(n_pts): # draw points
         curr_color = hsv_to_rgb(i/n_pts, 1, 1)
-        m.plot(pts[i][0], pts[i][1], marker='o', color=curr_color, fillstyle='full', markeredgewidth=0.0)
+        x,y = m(pts[i][0], pts[i][1])
+        m.plot(x, y, marker='o', color=curr_color, fillstyle='full', markeredgewidth=0.0,alpha=0.7)
+        texts.append(plt.text(x, y, dates[i]))
         txt += "<span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span> <br>"
+    adjust_text(texts, 1, 0.4)
     if export:
         plt.savefig(filename, bbox_inches='tight')
-    # plt.show()
+        plt.close()
     return txt
 names = ["Franz Beckenbauer"]
 for name in names:
