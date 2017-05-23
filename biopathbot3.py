@@ -219,6 +219,7 @@ def drawmap_colors(pts, dates, places, filename, export=False):
         txt += "<br><span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span>"
     if export:
         plt.savefig(filename, bbox_inches='tight')
+        plt.close()
     # plt.show()
     return txt
 
