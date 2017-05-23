@@ -12,6 +12,7 @@ deux types de cartes :
 - pts reliés -> trajectoire de la personne, dans un certain ordre
 - pts tagués de la date -> chronologie, densité de la personne (plus situé en suisse)
 
+- A quelle fréquence devrait tourner (tous les jours, toutes les semaines)
 
 [EXEMPLES]
 
@@ -29,17 +30,15 @@ Visualisation:
 
 - Si des événements sont spatialement trop proches, ils vont se superposer sur la carte et il deviendra difficile de retracer les événements d'une façon visuellement claire. Par exemple, pour un trait entre Berne et Lausanne, il sera difficile de juger si une personne a fait plusieurs fois ce même déplacement ou ne l'a fait qu'une seule fois au cours de sa vie.
 - Si la densité d'évènement est trop grande, les étiquettes pour les dates créé une sorte de tapis et les marqueur de lieux deviennent difficilement visible.
-- Dans certains cas, les évènements sont majoritairement dans un pays mais un évènement se situe de l'autre côté de la planète. Cela créé le même problème d'évènement spatialement trop proche mais qui pourrait être résolu en crééant deux cartes séparé pour chaque contient ou une mini carte pour l'évènement éloigné. 
+- Dans certains cas, les évènements sont majoritairement dans un pays mais un évènement se situe de l'autre côté de la planète. Cela créé le même problème d'évènement spatialement trop proche mais qui pourrait être résolu en crééant deux cartes séparé pour chaque contient ou une mini carte pour l'évènement éloigné.
 
 
 Données :
 
 - Si les données ne sont pas suffisamment précises, elles seront approximées (1980 devient 1980.01.01 tandis que le point géographique correspondant à la Suisse sera son centre géographique). Cela peut mener à des erreurs de trajectoire lors du tri chronologique ou simplement à une position différente de la réalité sur la carte.
 - Parfois l'outil qui transforme les lieux en coordonnées géographiques crée des erreurs. Par exemple "Rome" devient "Lomé" qui se situe au Togo.
-- L'extraction basée sur "1932.01.02 / Lieu." exactement. Une petite correction est mise en place pour les cas manquant des espaces. Mais pour les pages comme (http://wikipast.epfl.ch/wikipast/index.php/Daniel_Br%C3%A9laz) les données ne sont pas formatées comme les autres, et le bot ne peut pas les extraire correctement.
+- L'extraction basée sur "1932.01.02 / Lieu." exactement. Une petite correction est mise en place pour les cas manquant des espaces. Mais pour les pages comme (http://wikipast.epfl.ch/wikipast/index.php/Daniel_Br%C3%A9laz , http://wikipast.epfl.ch/wikipast/index.php/Robert_Oppenheimer (new york / new york city), http://wikipast.epfl.ch/wikipast/index.php/Mao_Zedong) les données ne sont pas formatées comme les autres, et le bot ne peut pas les extraire correctement.
 - Certains événements se passe sans que la personne soit physiquement présente, mais on ne peut pas le détecter automatiquement. Les lieux apparaissent donc sur la carte.
 - S'il existe des événements post-mortem mais que la mort de la personne n'est pas mentionnée ou ne suit pas la convention de l'hypermot Décès, ces données seront aussi extraites et placées sur la carte, alors même que la personne ne se déplace pas.
 
 --> POURCENTAGE DE REUSSITE
-
-

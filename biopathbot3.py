@@ -101,11 +101,13 @@ def addLinkToOriginalPage(name):
         payload={'action':'edit','assert':'user','format':'json','utf8':'','appendtext':content,'summary':summary,'title':title,'token':edit_token}
         r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
 
-addLinkToOriginalPage("Jean Tinguely")
 
-def addToPage(name, img):
+def addToPage(name, images, legend):
     title = name + " BioPathBot"
-    content = "[[Fichier: "+ img +"]]"
+    content = "[["+name+"]]<br>"+'<div style="display:inline-block;">'+legend+'</div>'
+    for img in images:
+        content += "[[Fichier: "+ img +"|left]]"
+
     pageToChange = requests.post(baseurl+'api.php?action=query&titles='+title+'&export&exportnowrap')
     payload={'action':'edit','assert':'user','format':'json','utf8':'','text':content,'summary':summary,'title':title,'token':edit_token}
     r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
@@ -141,14 +143,14 @@ def getDataFromPage(name):
             dates.append(dateToAdd)
 
         # get place if exist
-        place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
+        place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
         if(len(place)==0):
-            place = re.findall("(?<=\/\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
+            place = re.findall("(?<=\/\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
             placeToAdd = place[0]
             places.append(placeToAdd)
-            if placeToAdd == "Rome": 
+            if placeToAdd == "Rome":
                 placeToAdd = "Roma"
 
             for retries in range(5):
@@ -171,9 +173,10 @@ def getDataFromPage(name):
             data.append(dataToAdd);
 
         # stop getting data if find [[Décès]]
-        foundDeces = re.findall("(\[\[Décès*\]\] de \[\["+name+")",line)
+        foundDeces = re.findall("(\[\[Décès*\]\] (de |d)\[\["+name+")",line)
         if(len(foundDeces) != 0):
             break
+
     return [data, dates, places]
 
 # finds the minimal and maximal longitude and latitude
@@ -194,6 +197,30 @@ def findCorners(pts):
             maxlat = currlat
 
     return [minlon, maxlon, minlat, maxlat]
+
+
+# draws the map, some points and the lines
+def drawmap_colors(pts, dates, places, filename, export=False):
+    n_pts = len(pts)
+    corners = findCorners(pts)
+    txt = ""
+    m = Basemap(llcrnrlon=corners[0]-1, llcrnrlat=corners[2]-1, urcrnrlon=corners[1]+1, urcrnrlat=corners[3]+1, resolution='i')
+    m.drawmapboundary(fill_color='0.6')
+    m.drawcountries(linewidth=1.0, color='0.6')
+    m.fillcontinents(color='white', lake_color='white')
+    for i in range(n_pts-1): # draw lines
+        for j in range(SEGMENTS):
+            start = pts[i] + (pts[i+1]-pts[i])*(j/SEGMENTS)
+            end = pts[i] + (pts[i+1]-pts[i])*((j+1)/SEGMENTS)
+            m.plot([start[0], end[0]], [start[1], end[1]], color=hsv_to_rgb((i+j/SEGMENTS)/n_pts, 1, 1))
+    for i in range(n_pts): # draw points
+        curr_color = hsv_to_rgb(i/n_pts, 1, 1)
+        m.plot(pts[i][0], pts[i][1], marker='o', color=curr_color, fillstyle='full', markeredgewidth=0.0)
+        txt += "<br><span style='color:" + rgb2hex(curr_color) + "; font-weight:bold'>" + dates[i] + " / " + places[i] + ". </span>"
+    if export:
+        plt.savefig(filename, bbox_inches='tight')
+    # plt.show()
+    return txt
 
 # inp: point inside the box
 # hs: half dimensions of the box
@@ -249,7 +276,7 @@ def adjust_text(texts, text_width, text_height,num_iterations=20,eta=0.5):
     for _ in range(num_iterations):
         random.shuffle(indices)
         for (i,j) in itertools.combinations(indices, 2):
-            if i == j: 
+            if i == j:
                 continue
             # pdb.set_trace()
             f = repulsion_force(text_pos[i], text_pos[j], bboxes[i], bboxes[j])
@@ -269,7 +296,7 @@ def adjust_text(texts, text_width, text_height,num_iterations=20,eta=0.5):
         texts[i].remove()
 
 # draws the map, some points and the lines
-def drawmap(pts, dates, places, filename, export=False):
+def drawmap_date(pts, dates, places, filename, export=False):
     n_pts = len(pts)
     corners = findCorners(pts)
     txt = ""
@@ -326,13 +353,18 @@ def drawmap(pts, dates, places, filename, export=False):
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     return txt
-names = ["Franz Beckenbauer"]
+
+names = ["Jean Tinguely"]
+
 for name in names:
-    image_filename = (name + "_biopath.png").replace(" ","_")
+    image_filename_colors = (name + "_colors_biopath.png").replace(" ","_")
+    image_filename_date = (name + "_date_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
-    print(data)
     if len(data[0]) != 0:
-        legend = drawmap(np.array(data[0]), data[1], data[2], image_filename, True)
-        uploadMap(image_filename)
-        addToPage(name, image_filename)
+        legend_colors = drawmap_colors(np.array(data[0]), data[1], data[2], image_filename_colors, True)
+        drawmap_date(np.array(data[0]), data[1], data[2], image_filename_date, True)
+        uploadMap(image_filename_date)
+        uploadMap(image_filename_colors)
+        addToPage(name, [image_filename_colors, image_filename_date], legend_colors)
         addLinkToOriginalPage(name)
+        print("end")
