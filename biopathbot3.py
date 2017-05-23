@@ -140,7 +140,6 @@ def getDataFromPage(name):
 
         if len(date) != 0 :
             dateToAdd = date[0][0]
-            dates.append(dateToAdd)
 
         # get place if exist
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
@@ -149,7 +148,6 @@ def getDataFromPage(name):
         location = ""
         if len(place) != 0:
             placeToAdd = place[0]
-            places.append(placeToAdd)
             if placeToAdd == "Rome":
                 placeToAdd = "Roma"
 
@@ -170,7 +168,9 @@ def getDataFromPage(name):
         # if both the date and the location are available, append in data array
         if dateToAdd and location:
             dataToAdd = [location.longitude,location.latitude];
-            data.append(dataToAdd);
+            dates.append(dateToAdd)
+            places.append(placeToAdd)
+            data.append(dataToAdd)
 
         # stop getting data if find [[Décès]]
         foundDeces = re.findall("(\[\[Décès*\]\] (de |d)\[\["+name+")",line)
@@ -355,7 +355,7 @@ def drawmap_date(pts, dates, places, filename, export=False):
         plt.close()
     return txt
 
-names = ["Jean Tinguely"]
+names = ["Robert Oppenheimer"]
 
 for name in names:
     image_filename_colors = (name + "_colors_biopath.png").replace(" ","_")
@@ -364,8 +364,8 @@ for name in names:
     if len(data[0]) != 0:
         legend_colors = drawmap_colors(np.array(data[0]), data[1], data[2], image_filename_colors, True)
         drawmap_date(np.array(data[0]), data[1], data[2], image_filename_date, True)
-        uploadMap(image_filename_date)
-        uploadMap(image_filename_colors)
-        addToPage(name, [image_filename_colors, image_filename_date], legend_colors)
-        addLinkToOriginalPage(name)
+        #uploadMap(image_filename_date)
+        #uploadMap(image_filename_colors)
+        #addToPage(name, [image_filename_colors, image_filename_date], legend_colors)
+        #addLinkToOriginalPage(name)
         print("end")
