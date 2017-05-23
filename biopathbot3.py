@@ -40,8 +40,8 @@ for user in protected_logins:
             liste_pages.append(primitive['title'])
 
 names=list(set(liste_pages))
-"""for title in names:
-    print(title)"""
+for title in names:
+    print(title)
 
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
@@ -145,12 +145,15 @@ def getDataFromPage(name):
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
         if(len(place)==0):
             place = re.findall("(?<=\/\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
-        location = ""
+        placeToAdd = ""
         if len(place) != 0:
             placeToAdd = place[0]
             if placeToAdd == "Rome":
                 placeToAdd = "Roma"
 
+        # if both the date and the location are available, append in data array
+        if dateToAdd and placeToAdd:
+            location = ""
             for retries in range(5):
                 try:
                     location = geolocator.geocode(placeToAdd)
@@ -164,13 +167,10 @@ def getDataFromPage(name):
 
             if location:
                 print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
-
-        # if both the date and the location are available, append in data array
-        if dateToAdd and location:
-            dataToAdd = [location.longitude,location.latitude];
-            dates.append(dateToAdd)
-            places.append(placeToAdd)
-            data.append(dataToAdd)
+                dataToAdd = [location.longitude,location.latitude];
+                dates.append(dateToAdd)
+                places.append(placeToAdd)
+                data.append(dataToAdd)
 
         # stop getting data if find [[Décès]]
         foundDeces = re.findall("(\[\[Décès*\]\] (de |d)\[\["+name+")",line)
@@ -355,8 +355,6 @@ def drawmap_date(pts, dates, places, filename, export=False):
         plt.close()
     return txt
 
-names = ["Robert Oppenheimer"]
-
 for name in names:
     image_filename_colors = (name + "_colors_biopath.png").replace(" ","_")
     image_filename_date = (name + "_date_biopath.png").replace(" ","_")
@@ -364,8 +362,8 @@ for name in names:
     if len(data[0]) != 0:
         legend_colors = drawmap_colors(np.array(data[0]), data[1], data[2], image_filename_colors, True)
         drawmap_date(np.array(data[0]), data[1], data[2], image_filename_date, True)
-        #uploadMap(image_filename_date)
-        #uploadMap(image_filename_colors)
-        #addToPage(name, [image_filename_colors, image_filename_date], legend_colors)
-        #addLinkToOriginalPage(name)
+        uploadMap(image_filename_date)
+        uploadMap(image_filename_colors)
+        addToPage(name, [image_filename_colors, image_filename_date], legend_colors)
+        addLinkToOriginalPage(name)
         print("end")
