@@ -40,8 +40,8 @@ for user in protected_logins:
             liste_pages.append(primitive['title'])
 
 names=list(set(liste_pages))
-for title in names:
-    print(title)
+"""for title in names:
+    print(title)"""
 
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
@@ -111,7 +111,6 @@ def addToPage(name, img):
     r4=requests.post(baseurl+'api.php',data=payload,cookies=edit_cookie)
     print(r4.text)
 
-# @TODO not get post-mortem data -> check Décès
 # BioPathBot : add line of databiographie to the right page (time and space)
 def getDataFromPage(name):
     data = []
@@ -143,6 +142,8 @@ def getDataFromPage(name):
 
         # get place if exist
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
+        if(len(place)==0):
+            place = re.findall("(?<=\/\[\[)[A-zÀ-ÿ\s]*(?=\]\])",line)
         location = ""
         if len(place) != 0:
             placeToAdd = place[0]
@@ -169,7 +170,7 @@ def getDataFromPage(name):
             dataToAdd = [location.longitude,location.latitude];
             data.append(dataToAdd);
 
-        # stop getting data
+        # stop getting data if find [[Décès]]
         foundDeces = re.findall("(\[\[Décès*\]\] de \[\["+name+")",line)
         if(len(foundDeces) != 0):
             break
@@ -325,10 +326,11 @@ def drawmap(pts, dates, places, filename, export=False):
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     return txt
-
+names = ["Franz Beckenbauer"]
 for name in names:
     image_filename = (name + "_biopath.png").replace(" ","_")
     data = getDataFromPage(name)
+    print(data)
     if len(data[0]) != 0:
         legend = drawmap(np.array(data[0]), data[1], data[2], image_filename, True)
         uploadMap(image_filename)
