@@ -40,8 +40,8 @@ for user in protected_logins:
             liste_pages.append(primitive['title'])
 
 names=list(set(liste_pages))
-"""for title in names:
-    print(title)"""
+for title in names:
+    print(title)
 
 # Login request
 payload={'action':'query','format':'json','utf8':'','meta':'tokens','type':'login'}
@@ -140,19 +140,20 @@ def getDataFromPage(name):
 
         if len(date) != 0 :
             dateToAdd = date[0][0]
-            dates.append(dateToAdd)
 
         # get place if exist
         place = re.findall("(?<=\/\s\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
         if(len(place)==0):
             place = re.findall("(?<=\/\[\[)[A-zÀ-ÿ\s\-]*(?=\]\])",line)
-        location = ""
+        placeToAdd = ""
         if len(place) != 0:
             placeToAdd = place[0]
-            places.append(placeToAdd)
             if placeToAdd == "Rome":
                 placeToAdd = "Roma"
 
+        # if both the date and the location are available, append in data array
+        if dateToAdd and placeToAdd:
+            location = ""
             for retries in range(5):
                 try:
                     location = geolocator.geocode(placeToAdd)
@@ -166,11 +167,10 @@ def getDataFromPage(name):
 
             if location:
                 print("Location: " + placeToAdd + " : " + str(location.longitude) + "," + str(location.latitude))
-
-        # if both the date and the location are available, append in data array
-        if dateToAdd and location:
-            dataToAdd = [location.longitude,location.latitude];
-            data.append(dataToAdd);
+                dataToAdd = [location.longitude,location.latitude];
+                dates.append(dateToAdd)
+                places.append(placeToAdd)
+                data.append(dataToAdd)
 
         # stop getting data if find [[Décès]]
         foundDeces = re.findall("(\[\[Décès*\]\] (de |d)\[\["+name+")",line)
@@ -354,8 +354,6 @@ def drawmap_date(pts, dates, places, filename, export=False):
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     return txt
-
-names = ["Jean Tinguely"]
 
 for name in names:
     image_filename_colors = (name + "_colors_biopath.png").replace(" ","_")
