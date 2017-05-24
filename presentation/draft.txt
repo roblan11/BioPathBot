@@ -1,4 +1,4 @@
-BioPathBot
+﻿BioPathBot
 
 Depuis une databiographie suivant le format utilisé sur le wiki (ex: 1890.03.19 / Genève), le BioPathBot est capable d'extraire les informations temporelles et spatiales. Ces deux données forment un tuple et sont parsées de façon suivante :
 
@@ -37,8 +37,11 @@ Données :
 
 - Si les données ne sont pas suffisamment précises, elles seront approximées (1980 devient 1980.01.01 tandis que le point géographique correspondant à la Suisse sera son centre géographique). Cela peut mener à des erreurs de trajectoire lors du tri chronologique ou simplement à une position différente de la réalité sur la carte.
 - Parfois l'outil qui transforme les lieux en coordonnées géographiques crée des erreurs. Par exemple "Rome" devient "Lomé" qui se situe au Togo.
-- L'extraction basée sur "1932.01.02 / Lieu." exactement. Une petite correction est mise en place pour les cas manquant des espaces. Mais pour les pages comme (http://wikipast.epfl.ch/wikipast/index.php/Daniel_Br%C3%A9laz , http://wikipast.epfl.ch/wikipast/index.php/Robert_Oppenheimer (new york / new york city), http://wikipast.epfl.ch/wikipast/index.php/Mao_Zedong) les données ne sont pas formatées comme les autres, et le bot ne peut pas les extraire correctement.
+- L'extraction basée sur "1932.01.02 / Lieu." exactement. Une petite correction est mise en place pour les cas manquant des espaces. Mais pour les pages comme (http://wikipast.epfl.ch/wikipast/index.php/Daniel_Br%C3%A9laz, http://wikipast.epfl.ch/wikipast/index.php/Mao_Zedong, Paul Maillefer) les données ne sont pas formatées comme les autres, et le bot ne peut pas les extraire correctement.
 - Certains événements se passe sans que la personne soit physiquement présente, mais on ne peut pas le détecter automatiquement. Les lieux apparaissent donc sur la carte.
 - S'il existe des événements post-mortem mais que la mort de la personne n'est pas mentionnée ou ne suit pas la convention de l'hypermot Décès, ces données seront aussi extraites et placées sur la carte, alors même que la personne ne se déplace pas.
+- BioPathBot ne prend pas ce qui se passe après le décès. Dans le cas de Nicéphore Nièpce, où le décès apparaît dès la deuxième avant les autres évènements, seul la naissance et le décès apparaissenent sur la carte.
 
 --> POURCENTAGE DE REUSSITE
+Seulement 3 pages avec des problèmes -> Environ 90 % de réussite.
+
