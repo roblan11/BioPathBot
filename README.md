@@ -1,11 +1,13 @@
 # BioPathBot
 
+SHS : Digital Humanities A, EPFL, 2017
+
 ## Collaborateurs
 
-* Christophe Badoux
-* Kim Lan Phan Hoang
-* Robin Lan
-* Julien Burkhard
+* [Christophe Badoux](https://github.com/christophebx)
+* [Kim Lan Phan Hoang](https://github.com/pyphilia)
+* [Robin Lan](https://github.com/roblan11)
+* [Julien Burkhard](https://github.com/sherushe)
 
 ## Librairies
 
@@ -28,9 +30,3 @@ et ajoute l'évènement dans la page de référence spatiotemporelle de taille m
 La biographie d'Henri Dunant est transformée en séquence de zones spatiotemporelles.
 
 Eventuellement cette page peut aussi contenir une carte temporelle.
-
-## Login
-
-username: BioPathBot <br>
-password: chkiroju <br>
-(email: roblan11@hotmail.com)
